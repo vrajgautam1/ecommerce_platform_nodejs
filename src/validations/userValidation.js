@@ -2,17 +2,11 @@ const Joi = require('joi');
 
 const registerSchema = Joi.object({
     username: Joi.string().alphanum().min(3).max(30).required(),
-
     name: Joi.string().min(3).max(30),
-
     password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')),
-
     gender: Joi.string().valid('male', 'female', 'others'),
-
     phone: Joi.string().pattern(/^[6-9]\d{9}$/).required(),
-    
     email: Joi.string().email().required(), 
-
     role: Joi.string().valid('user', 'vendor').default('user')
 })
 

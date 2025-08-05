@@ -17,7 +17,13 @@ module.exports.register = async (req, res) => {
   if (error) {
     return res.status(400).json({ error: error.message });
   }
-  const { name, email, username, gender, phone, password } = req.body;
+  const { name, email, username, gender, phone, password, role } = req.body; //role is just an input field
+
+  let roleArray = ["user"] //predefine an array with users as a default field
+
+  if(role === "vendor"){
+    roleArray.push("vendor")
+  }
 
   try {
     const userExists = await Users.findOne({
@@ -39,7 +45,7 @@ module.exports.register = async (req, res) => {
       phone,
       gender,
       password:encryptedPassword,
-      role: role||"user"
+      role: roleArray
     });
 
     const otpForUser = otpGen();
