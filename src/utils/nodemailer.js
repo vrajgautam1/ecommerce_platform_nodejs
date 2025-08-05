@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendOTP(name, email, otp) {
+async function sendOtp(name, email, otp) {
   let emailBody = otpTemplate(name, otp);
   
   const obj = {
@@ -28,4 +28,4 @@ async function sendOTP(name, email, otp) {
   console.log("Message sent:", info.messageId);
 }
 
-module.exports = { sendOTP };
+module.exports = { sendOtp };

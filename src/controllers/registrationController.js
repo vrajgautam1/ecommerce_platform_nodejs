@@ -38,8 +38,10 @@ module.exports.register = async (req, res) => {
       email,
       phone,
       gender,
-      password:encryptedPassword
+      password:encryptedPassword,
+      role: role||"user"
     });
+
     const otpForUser = otpGen();
 
     await redisClient.set(`otpFor${email}`, otpForUser, { EX: 60 * 5 });

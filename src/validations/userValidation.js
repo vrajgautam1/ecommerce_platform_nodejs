@@ -11,7 +11,9 @@ const registerSchema = Joi.object({
 
     phone: Joi.string().pattern(/^[6-9]\d{9}$/).required(),
     
-    email: Joi.string().email()
+    email: Joi.string().email().required(), 
+
+    role: Joi.string().valid('user', 'vendor').default('user')
 })
 
 const verifyOtpSchema = Joi.object({
