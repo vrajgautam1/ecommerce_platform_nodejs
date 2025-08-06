@@ -35,6 +35,15 @@ const VendorDetails = sequelize.define("VendorDetails", {
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       defaultValue: "pending",
     },
+    businessType:{
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    PAN:{
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    }
 }, {
     timestamps: true
 })

@@ -1,84 +1,30 @@
-"use strict";
+let {Country, State, City} = require("country-state-city")
 
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    /**
-     * Add altering commands here.
-     *
-     * Example:
-     * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
-     */
+// console.log(State.getStatesOfCountry("IN"))
+// console.log(City.getCitiesOfState("IN","GJ"))
 
-    await queryInterface.createTable("users", {
-      id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-        allowNull: false,
-      },
-      name: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      phone: {
-        type: Sequelize.STRING,
-        allowNull: true,
-        unique: true,
-      },
-      username: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      password: {
-        type: Sequelize.STRING,
-      },
-      company: {
-        type: Sequelize.STRING,
-      },
-      role: {
-        type: Sequelize.ENUM("admin", "user", "vendor"),
-        allowNull: false,
-      },
-      accountStatus: {
-        type: Sequelize.ENUM("active", "inactive", "pending"),
-        allowNull: false,
-        defaultValue: "inactive",
-      },
-      lastLoginAt: {
-        type: Sequelize.DATE,
-        allowNull: true,
-      },
-      lastLogoutAt: {
-        type: Sequelize.DATE,
-        allowNull: true,
-      },
-      createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-      },
-      updatedAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-      },
-    });
-  },
 
-  async down(queryInterface, Sequelize) {
-    /**
-     * Add reverting commands here.
-     *
-     * Example:
-     * await queryInterface.dropTable('users');
-     */
-    await queryInterface.dropTable("users");
-  },
-};
+const statesList = State.getStatesOfCountry("IN")
+// console.log(typeof states)
+// console.log(states);
+
+// const lowercaseStateList = statesList.map(state => state.name.toLowerCase())
+// const isValidState = lowercaseStateList.includes(stateName.toLowerCase())
+// console.log(isValidState)
+
+let stateName = "Gujarat"
+const state = statesList.find(state => state.name.toLowerCase() === stateName.toLowerCase())
+// const somethingWillHappen = statesList.some(state => state.name.toLowerCase() === stateName.toLowerCase())
+// console.log(somethingWillHappen)
+
+// console.log(state.isoCode)
+
+let cityName = "mumbai"
+const citiesList = City.getCitiesOfState("IN", state.isoCode)
+
+const city = citiesList.find(city => city.name.toLowerCase() === cityName.toLowerCase())
+console.log(city);
+
+if(!city){
+  console.log(`please check ${cityName} probably is not located in ${stateName}`);
+}

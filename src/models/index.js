@@ -48,8 +48,6 @@ AdminLogs.belongsTo(Users, {
   onUpdate: "CASCADE"
 })
 
-
-
 module.exports = {
   sequelize,
   Sequelize,
