@@ -13,4 +13,21 @@ function otpTemplate(name, otp) {
   `;
 }
 
-module.exports = {otpTemplate};
+function vendorRequestTemplate(companyName, email) {
+  return `
+    <div style="font-family: Arial, sans-serif; padding: 20px;">
+      <h2 style="color: #4CAF50;">📥 New Vendor Request</h2>
+      <p>A new vendor has submitted a request for approval:</p>
+      <ul>
+        <li><strong>Business Name:</strong> ${companyName}</li>
+        <li><strong>Vendor Email:</strong> ${email}</li>
+      </ul>
+      <p>Please log in to the admin panel and visit vendorDetails section to review and approve/reject the request.</p>
+      <br />
+      <p style="color: #888;">– Shopfinity System</p>
+    </div>
+  `;
+}
+
+
+module.exports = {otpTemplate, vendorRequestTemplate};

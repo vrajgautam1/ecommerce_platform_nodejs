@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const vendorApplyingFormSchema = Joi.object({
   addressLine1: Joi.string().required().messages({
-    "string.empty": "Email is required",
+    "string.empty": "Address Line 1 is required",
   }),
   addressLine2: Joi.string().optional().allow(""),
   city: Joi.string().required(),
@@ -24,7 +24,7 @@ const vendorApplyingFormSchema = Joi.object({
   email: Joi.string().email().required().messages({
     "string.empty": "email cannot be empty",
   }),
-  phone: Joi.string()
+  businessPhone: Joi.string()
     .pattern(/^[6-9][0-9]{9}$/)
     .required()
     .messages({
@@ -33,3 +33,5 @@ const vendorApplyingFormSchema = Joi.object({
         "phone number is invalid, please enter a valid 10 digit indian phone number",
     }), // Indian mobile
 });
+
+module.exports = {vendorApplyingFormSchema}

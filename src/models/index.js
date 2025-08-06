@@ -4,9 +4,11 @@ const Sequelize = require("sequelize");
 const sequelize = require("./db");
 
 const Users = require("./users");
-const Address = require("./address")
+const Address = require("./address") //model name is address but here we are using it as Address so in controller it'll be db.Address
 const VendorDetails = require("./vendorDetails");
 const AdminLogs = require("./adminLogs")
+const Category = require("./categories")
+const SubCategory = require("./subCategories")
 
 Users.hasMany(Address, {
   foreignKey: "userId",
@@ -48,8 +50,20 @@ AdminLogs.belongsTo(Users, {
   onUpdate: "CASCADE"
 })
 
+// One category can have many subcategories
+Category.hasMany(SubCategory, {
+  foreignKey: "categoryId",
+});
+
+// Each subcategory belongs to one category
+SubCategory.belongsTo(Category, {
+  foreignKey: "categoryId",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
 module.exports = {
   sequelize,
   Sequelize,
-  Users, Address, AdminLogs, VendorDetails
+  Users, Address, AdminLogs, VendorDetails, Category, SubCategory
 };

@@ -1,7 +1,9 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("./dbconnection");
 
-const VendorDetails = sequelize.define("VendorDetails", {
+const VendorDetails = sequelize.define(
+  "VendorDetails",
+  {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -27,25 +29,36 @@ const VendorDetails = sequelize.define("VendorDetails", {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    address: {
-      type: DataTypes.TEXT,
+    addressId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "addresses", 
+        key: "id"
+      },
     },
     status: {
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       defaultValue: "pending",
     },
-    businessType:{
+    businessType: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    PAN:{
+    PAN: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    businessPhone:{
       type: DataTypes.STRING,
       allowNull: false,
       unique: true
     }
-}, {
-    timestamps: true
-})
+  },
+  {
+    timestamps: true,
+  }
+)
 
-module.exports = VendorDetails
+module.exports = VendorDetails;

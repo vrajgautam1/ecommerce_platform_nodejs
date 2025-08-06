@@ -43,6 +43,7 @@ const Address = sequelize.define(
     country: {
       type: DataTypes.STRING,
       allowNull: false,
+      defaultValue: "India"
     },
     type: {
       type: DataTypes.ENUM("home", "work"),
@@ -56,6 +57,7 @@ const Address = sequelize.define(
   },
   {
     timestamps: true,
+    tableName: "addresses" //use this incase u r not sure whether this will help u reach ur target table
   }
 );
 
