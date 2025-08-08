@@ -1,3 +1,5 @@
+// controllers/categoryController.js
+
 const db = require("../models");
 const Categories = db.Category;
 const SubCategories = db.SubCategory;
@@ -10,18 +12,12 @@ const {
 module.exports.fetchAllCategories = async (req, res) => {
   try {
     const includeSubCats = req.query.includeSubCats === "true";
-    const categoriesList = Categories.findAll(
-      { attributes: { exclude: ["createdAt", "updatedAt"] } }, //this is a classic case of a dropdown list with cats and subcats. the frontend dev will have to deal with very less confusing data aswell as we just saved a lot of kbs resulting in faster loading times.
-
-      //either i can write it like {attributes:["name", "imgUrl"]}
-      //plus if i want subcats jo bhi include subCats ki value hogi woh aa jayega
-      //in that case the frontend developer will have to mannually set include subcats to true
-      {
-        include: includeSubCats
-          ? [{ model: SubCategories, attributes: ["name", "imgUrl"] }]
-          : [],
-      }
-    );
+    const categoriesList = await Categories.findAll({
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      include: includeSubCats
+        ? [{ model: SubCategories, attributes: ["name", "imgUrl"] }]
+        : [],
+    });
     return res.status(200).json({ categoriesList });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -29,9 +25,9 @@ module.exports.fetchAllCategories = async (req, res) => {
 };
 
 module.exports.fetchCatById = async (req, res) => {
-  const { id } = Number(req.params);
+  const id = parseInt(req.params.id);
   try {
-    const category = Categories.findByPk(id, {
+    const category = await Categories.findByPk(id, {
       include: [{ model: SubCategories }],
     });
 
@@ -48,16 +44,11 @@ module.exports.fetchCatById = async (req, res) => {
 module.exports.getAllSubCats = async (req, res) => {
   try {
     const filters = {};
-    if (req.query.status) {
-      filters.status = req.query.status;
-    }
-    if (req.query.categoryId) {
-      filters.catId = req.query.categoryId;
-    }
-    if (req.query.subCatName) {
-      filters.subCat = req.query.subCatName;
-    }
-    const subCatList = SubCategories.findAll({ where: filters });
+    if (req.query.status) filters.status = req.query.status;
+    if (req.query.categoryId) filters.categoryId = req.query.categoryId;
+    if (req.query.subCatName) filters.name = req.query.subCatName;
+
+    const subCatList = await SubCategories.findAll({ where: filters });
     return res.status(200).json({ subCatList });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -66,31 +57,22 @@ module.exports.getAllSubCats = async (req, res) => {
 
 module.exports.subCatsInCat = async (req, res) => {
   try {
-    let catId = req.params.id;
-
+    const catId = parseInt(req.params.id);
     if (isNaN(catId)) {
-      //there are strong chances we will receive something. but that something can be different than a number in that case we must check if it is a NaN
       return res.status(400).json({ error: "received invalid categoryId" });
     }
 
-    const category = Categories.findByPk(catId);
-
+    const category = await Categories.findByPk(catId);
     if (!category) {
       return res
         .status(404)
         .json({ error: "category with this id does not exist" });
     }
 
-    let displayData = await SubCategories.findAll(
-      { where: { catId } },
-      { attributes: ["name", "description", "imgUrl"] }
-    );
-
-    if (!displayData) {
-      return res.status(400).json({
-        error: "category does not exist so cant get any sub categories aswell",
-      });
-    }
+    const displayData = await SubCategories.findAll({
+      where: { categoryId: catId },
+      attributes: ["name", "description", "imgUrl"],
+    });
 
     return res.status(200).json({ data: displayData });
   } catch (error) {
@@ -100,33 +82,20 @@ module.exports.subCatsInCat = async (req, res) => {
 
 module.exports.createCategory = async (req, res) => {
   const { error } = catCreationSchema.validate(req.body);
-  let imgUrl = req.file.filename;
+  if (error) return res.status(400).json({ error: error.message });
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
-
+  const imgUrl = req.file?.filename || null;
   const { name, description } = req.body;
   try {
-    const categoryExists = await Categories.findOne({
-      where: { category: name },
-    });
-
-    if (!categoryExists) {
+    const categoryExists = await Categories.findOne({ where: { name } });
+    if (categoryExists) {
       return res
         .status(400)
         .json({ error: "A category with that name already exists" });
     }
 
-    const category = await Categories.create({
-      name: name,
-      description,
-      imgUrl: imgUrl ? imgUrl : null,
-    });
-
-    return res
-      .status(200)
-      .json({ success: "category created", data: category });
+    const category = await Categories.create({ name, description, imgUrl });
+    return res.status(201).json({ success: "category created", data: category });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -134,34 +103,25 @@ module.exports.createCategory = async (req, res) => {
 
 module.exports.createSubCategory = async (req, res) => {
   const { error } = subCatCreationSchema.validate(req.body);
+  if (error) return res.status(400).json({ error: error.message });
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-
-  const imgUrl = req.file.filename;
+  const imgUrl = req.file?.filename || null;
   const { category, name, description } = req.body;
 
   try {
-    const catExists = await Categories.findOne({
-      where: { category: category },
-    });
-
+    const catExists = await Categories.findOne({ where: { name: category } });
     if (!catExists) {
       return res.status(404).json({
-        error:
-          "the category in which you are trying to enter a sub category does not exist",
+        error: "The category you're trying to assign the subcategory to doesn't exist",
       });
     }
 
     const subCatExistsInCat = await SubCategories.findOne({
-      where: { categoryId: catExists.id, name: name },
+      where: { categoryId: catExists.id, name },
     });
-
     if (subCatExistsInCat) {
-      return res.status(400).json({
-        error:
-          "a subcategory already exists in the category that you are trying to add a subcategory",
+      return res.status(409).json({
+        error: "Subcategory already exists in this category",
       });
     }
 
@@ -172,8 +132,8 @@ module.exports.createSubCategory = async (req, res) => {
       imgUrl,
     });
 
-    return res.status(200).json({
-      success: "new subcategory created successfully",
+    return res.status(201).json({
+      success: "Subcategory created successfully",
       data: newSubCat,
     });
   } catch (error) {
@@ -183,22 +143,18 @@ module.exports.createSubCategory = async (req, res) => {
 
 module.exports.updateCategory = async (req, res) => {
   const { error } = catSubCatUpdateSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+  if (error) return res.status(400).json({ error: error.message });
 
   const { name, description, id } = req.body;
-  const imgUrl = req.file.filename;
+  const imgUrl = req.file?.filename;
+
   try {
     const catExists = await Categories.findByPk(id);
-
     if (!catExists) {
-      return res
-        .status(404)
-        .json({ error: "the category that you want to update does not exist" });
+      return res.status(404).json({ error: "Category not found" });
     }
 
-    let updatePayload = {};
+    const updatePayload = {};
     if (name !== undefined) updatePayload.name = name;
     if (description !== undefined) updatePayload.description = description;
     if (imgUrl !== undefined) updatePayload.imgUrl = imgUrl;
@@ -207,14 +163,8 @@ module.exports.updateCategory = async (req, res) => {
       return res.status(400).json({ error: "No fields to update" });
     }
 
-    const categoryUpdated = await Categories.update(updatePayload, {
-      where: { id },
-    });
-
-    return res.status(200).json({
-      success: "category updated succcessfully",
-      data: categoryUpdated,
-    });
+    await Categories.update(updatePayload, { where: { id } });
+    return res.status(200).json({ success: "Category updated successfully" });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -222,23 +172,18 @@ module.exports.updateCategory = async (req, res) => {
 
 module.exports.updateSubCategory = async (req, res) => {
   const { error } = catSubCatUpdateSchema.validate(req.body);
-
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+  if (error) return res.status(400).json({ error: error.message });
 
   const { id, name, description } = req.body;
-  const imgUrl = req.file.filename;
+  const imgUrl = req.file?.filename;
 
   try {
-    const subCatExists = SubCategories.findByPk(id);
-
+    const subCatExists = await SubCategories.findByPk(id);
     if (!subCatExists) {
-      return res.status(400).json({ error: "subcategory does not exist" });
+      return res.status(404).json({ error: "Subcategory not found" });
     }
 
-    let updatePayload = {};
-
+    const updatePayload = {};
     if (name !== undefined) updatePayload.name = name;
     if (description !== undefined) updatePayload.description = description;
     if (imgUrl !== undefined) updatePayload.imgUrl = imgUrl;
@@ -247,47 +192,45 @@ module.exports.updateSubCategory = async (req, res) => {
       return res.status(400).json({ error: "No fields to update" });
     }
 
-    const updatedSubCategory = await SubCategories.update(updatePayload, {
-      where: { id },
-    });
-
-    return res.status(200).json({
-      success: "subcategory updated successfully",
-      data: updatedSubCategory,
-    });
+    await SubCategories.update(updatePayload, { where: { id } });
+    return res.status(200).json({ success: "Subcategory updated successfully" });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
 
-module.exports.deleteCategory = async(req, res)=>{
-    const {id} = parseInt(req.params)
+module.exports.deleteCategory = async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid category ID" });
+  }
 
-    if(isNaN(id) || id === null){
-        return res.status(400).json({error: "invalid id"})
+  try {
+    const categoryDeleted = await Categories.destroy({ where: { id } });
+    if (!categoryDeleted) {
+      return res.status(400).json({ error: "Category could not be deleted" });
     }
 
-    const categoryDeleted = await Categories.destroy({where:{id}})
+    return res.status(200).json({ success: "Category deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
 
-    if(!categoryDeleted){
-        return res.status(400).json({error:"the category could not be deleted"})
+module.exports.deleteSubcategory = async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid subcategory ID" });
+  }
+
+  try {
+    const subCatDeleted = await SubCategories.destroy({ where: { id } });
+    if (!subCatDeleted) {
+      return res.status(400).json({ error: "Subcategory could not be deleted" });
     }
 
-    return res.status(200).json({success: "category deleted successfully"})
-}
-
-module.exports.deleteSubcategory = async(req, res)=>{
-        const {id} = parseInt(req.params)
-
-    if(isNaN(id) || id === null){
-        return res.status(400).json({error: "invalid id"})
-    }
-
-    const categoryDeleted = await SubCategories.destroy({where:{id}})
-
-    if(!categoryDeleted){
-        return res.status(400).json({error:"the category could not be deleted"})
-    }
-
-    return res.status(200).json({success: "category deleted successfully"})
-}
+    return res.status(200).json({ success: "Subcategory deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
