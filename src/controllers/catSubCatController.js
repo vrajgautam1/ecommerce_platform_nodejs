@@ -1,7 +1,11 @@
 const db = require("../models");
 const Categories = db.Category;
 const SubCategories = db.SubCategory;
-const { catCreationSchema, subCatCreationSchema } = require("../validations/catSubCatValidation");
+const {
+  catCreationSchema,
+  subCatCreationSchema,
+  catSubCatUpdateSchema,
+} = require("../validations/catSubCatValidation");
 
 module.exports.fetchAllCategories = async (req, res) => {
   try {
@@ -83,12 +87,9 @@ module.exports.subCatsInCat = async (req, res) => {
     );
 
     if (!displayData) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "category does not exist so cant get any sub categories aswell",
-        });
+      return res.status(400).json({
+        error: "category does not exist so cant get any sub categories aswell",
+      });
     }
 
     return res.status(200).json({ data: displayData });
@@ -105,30 +106,188 @@ module.exports.createCategory = async (req, res) => {
     return res.status(400).json({ error: error.message });
   }
 
+  const { name, description } = req.body;
   try {
-    const categoryExists = await Categories.findOne({where:{category:name}})
+    const categoryExists = await Categories.findOne({
+      where: { category: name },
+    });
 
-    if(!categoryExists){
-        return res.status(400).json({error: "A category with that name already exists"})
+    if (!categoryExists) {
+      return res
+        .status(400)
+        .json({ error: "A category with that name already exists" });
     }
 
     const category = await Categories.create({
-      name:name,
+      name: name,
       description,
       imgUrl: imgUrl ? imgUrl : null,
-    })
+    });
 
-    return res.status(200).json({success:"category created", data:category})
+    return res
+      .status(200)
+      .json({ success: "category created", data: category });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
 
-module.exports.createSubCategory = async (req, res)=>{
-    const {error} = subCatCreationSchema.validate(req.body)
+module.exports.createSubCategory = async (req, res) => {
+  const { error } = subCatCreationSchema.validate(req.body);
 
-    if(error){
-        return res.status(400).json()
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  const imgUrl = req.file.filename;
+  const { category, name, description } = req.body;
+
+  try {
+    const catExists = await Categories.findOne({
+      where: { category: category },
+    });
+
+    if (!catExists) {
+      return res.status(404).json({
+        error:
+          "the category in which you are trying to enter a sub category does not exist",
+      });
     }
+
+    const subCatExistsInCat = await SubCategories.findOne({
+      where: { categoryId: catExists.id, name: name },
+    });
+
+    if (subCatExistsInCat) {
+      return res.status(400).json({
+        error:
+          "a subcategory already exists in the category that you are trying to add a subcategory",
+      });
+    }
+
+    const newSubCat = await SubCategories.create({
+      name,
+      description,
+      categoryId: catExists.id,
+      imgUrl,
+    });
+
+    return res.status(200).json({
+      success: "new subcategory created successfully",
+      data: newSubCat,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports.updateCategory = async (req, res) => {
+  const { error } = catSubCatUpdateSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  const { name, description, id } = req.body;
+  const imgUrl = req.file.filename;
+  try {
+    const catExists = await Categories.findByPk(id);
+
+    if (!catExists) {
+      return res
+        .status(404)
+        .json({ error: "the category that you want to update does not exist" });
+    }
+
+    let updatePayload = {};
+    if (name !== undefined) updatePayload.name = name;
+    if (description !== undefined) updatePayload.description = description;
+    if (imgUrl !== undefined) updatePayload.imgUrl = imgUrl;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const categoryUpdated = await Categories.update(updatePayload, {
+      where: { id },
+    });
+
+    return res.status(200).json({
+      success: "category updated succcessfully",
+      data: categoryUpdated,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports.updateSubCategory = async (req, res) => {
+  const { error } = catSubCatUpdateSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  const { id, name, description } = req.body;
+  const imgUrl = req.file.filename;
+
+  try {
+    const subCatExists = SubCategories.findByPk(id);
+
+    if (!subCatExists) {
+      return res.status(400).json({ error: "subcategory does not exist" });
+    }
+
+    let updatePayload = {};
+
+    if (name !== undefined) updatePayload.name = name;
+    if (description !== undefined) updatePayload.description = description;
+    if (imgUrl !== undefined) updatePayload.imgUrl = imgUrl;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const updatedSubCategory = await SubCategories.update(updatePayload, {
+      where: { id },
+    });
+
+    return res.status(200).json({
+      success: "subcategory updated successfully",
+      data: updatedSubCategory,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports.deleteCategory = async(req, res)=>{
+    const {id} = parseInt(req.params)
+
+    if(isNaN(id) || id === null){
+        return res.status(400).json({error: "invalid id"})
+    }
+
+    const categoryDeleted = await Categories.destroy({where:{id}})
+
+    if(!categoryDeleted){
+        return res.status(400).json({error:"the category could not be deleted"})
+    }
+
+    return res.status(200).json({success: "category deleted successfully"})
 }
 
+module.exports.deleteSubcategory = async(req, res)=>{
+        const {id} = parseInt(req.params)
+
+    if(isNaN(id) || id === null){
+        return res.status(400).json({error: "invalid id"})
+    }
+
+    const categoryDeleted = await SubCategories.destroy({where:{id}})
+
+    if(!categoryDeleted){
+        return res.status(400).json({error:"the category could not be deleted"})
+    }
+
+    return res.status(200).json({success: "category deleted successfully"})
+}

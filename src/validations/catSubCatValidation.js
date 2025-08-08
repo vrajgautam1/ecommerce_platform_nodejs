@@ -11,4 +11,11 @@ const subCatCreationSchema = Joi.object({
     description: Joi.string.required()
 })
 
-module.exports = {catCreationSchema, subCatCreationSchema}
+const catSubCatUpdateSchema = Joi.object({
+    name: Joi.string(),
+    description: Joi.string(),
+    id: Joi.number()
+})
+
+
+module.exports = {catCreationSchema, subCatCreationSchema, catSubCatUpdateSchema}
