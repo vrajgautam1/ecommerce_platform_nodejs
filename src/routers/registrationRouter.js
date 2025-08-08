@@ -6,3 +6,4 @@ router.post("/verifyOtp", registrationController.verifyOtp) //done
 router.post("/resendOtp", registrationController.resendOtp) //wip
 
 module.exports = router
+

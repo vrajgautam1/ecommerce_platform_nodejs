@@ -30,6 +30,10 @@ const SubCategory = sequelize.define("SubCategory", {
     type: DataTypes.ENUM("active", "inactive"),
     defaultValue: "active",
   },
+  imgUrl:{
+    type:DataTypes.STRING,
+    allowNull: true
+  }
 }, {
   timestamps: true,
   tableName: "subcategories"

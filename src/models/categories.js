@@ -22,6 +22,10 @@ const Category = sequelize.define("Category", {
     type: DataTypes.ENUM("active", "inactive"),
     defaultValue: "active",
   },
+  imgUrl:{
+    type: DataTypes.STRING,
+    allowNull: true
+  }
 }, {
   timestamps: true,
   tableName: "categories"
