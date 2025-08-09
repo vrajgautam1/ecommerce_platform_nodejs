@@ -1,9 +1,11 @@
 const express = require("express")
 const app = express()
 const mainRouter = require("./src/routers/index")
+const path = require("path")
 
 app.use(express.urlencoded({extended:true}))
 app.use(express.json)
+app.use("/uploads", express.static(path.join(__dirname, "src", "uploads")))
 
 app.use(mainRouter)
 
