@@ -19,11 +19,11 @@ const Address = sequelize.define(
       allowNull: false,
     },
     pincode: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     addressLine1: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255), 
       allowNull: false,
     },
     addressLine2: {
@@ -43,7 +43,7 @@ const Address = sequelize.define(
     country: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: "India"
+      defaultValue: "India",
     },
     type: {
       type: DataTypes.ENUM("home", "work"),
@@ -57,7 +57,7 @@ const Address = sequelize.define(
   },
   {
     timestamps: true,
-    tableName: "addresses" //use this incase u r not sure whether this will help u reach ur target table
+    tableName: "addresses", //use this incase u r not sure whether this will help u reach ur target table
   }
 );
 

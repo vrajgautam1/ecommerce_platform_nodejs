@@ -72,6 +72,10 @@ const Products = DataTypes.define("Products",{
       slug:{
         type: DataTypes.STRING,
         unique: true
+      },
+      brand:{
+        type: DataTypes.STRING,
+        allowNull: false
       }
 },{
   timestamps:true,

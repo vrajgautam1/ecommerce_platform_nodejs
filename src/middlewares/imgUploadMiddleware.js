@@ -3,7 +3,7 @@ const path = require("path")
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "uploads"))  //where to store
+    cb(null, path.join(__dirname,  "../uploads"))  //where to store
   },
   filename: function (req, file, cb) {
     const{id} = req.user
@@ -18,26 +18,28 @@ function fileFilter(req, file, cb){
     if(!allowedTypes.includes(ext)){
         return cb(new Error("only jpg, jpeg, and png images are allowed "))
     }
+    cb(null, true)
 }
 
 const upload = multer({ 
     storage: storage,
     limits:{
-    files: 5,
+    // files: 5,
     fileSize: 5*1024*1024
     },
     fileFilter
 })
 .fields([
     {name: "displayImage", maxCount:1},
-    {name: "productImages", maxCount:10}
+    {name: "productImages", maxCount:10},
+    {name: "profileImage", maxCount:1}
 ]) //single chhe ke array chhe? su naam apvanu chhe "image", "images", "files", "etc"
 
 function uploadsMiddleware(req, res, next){
     upload(req, res, function(err){
 
         if(err instanceof multer.MulterError){
-            if(err.code === "LIMIT_FILE_COUNT"){
+            if(err.code === "LIMIT_UNEXPECTED_FILE"){ //instead of limit_file_count we use this     
                 return res.status(400).json({error:"cant upload more than 5 images"})
             }
 
@@ -47,7 +49,7 @@ function uploadsMiddleware(req, res, next){
 
             return res.status(400).json({error: err.message})
         }else if(err instanceof Error){
-            return res.status(400).json({error: err.message})
+            return res.status(415).json({error: "invalid image type. not allowed"})
         }
         next()
     })

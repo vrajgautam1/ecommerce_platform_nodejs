@@ -96,10 +96,19 @@ const productUpdateSchema = Joi.object({
   ).messages({
     "array.base": "Tags must be an array"
   }),
-
-  slug: Joi.string().messages({
-    "string.base": "Slug must be a string"
-  })
 })
 
-module.exports = {productCreateSchema, productUpdateSchema}
+const productListSchema = Joi.object({
+  q: Joi.string().min(3).max(64),
+  categoryId: Joi.number().integer(),
+  subCategoryId: Joi.number().integer(),
+  minPrice: Joi.number().min(0), //the number should not be less than 0 by accident
+  maxPrice: Joi.number().min(0), //same as above
+  inStock: Joi.boolean(),
+  rating: Joi.number().min(0).max(5),
+  sortBy: Joi.string().valid("id", "price", "rating", "stock").default("rating"),
+  sortOrder: Joi.string().valid("ASC", "DESC").default("ASC"),
+  page: Joi.number().integer().min(1).default(1)
+})
+
+module.exports = {productCreateSchema, productUpdateSchema, productListSchema}

@@ -101,11 +101,6 @@ module.exports.viewProfile = async(req, res)=>{
     try {
         let userInDb = Users.find({where:{id}}, {attributes:["name", "username", "email", "company", "role", "accountStatus", "gender", "lastLoginAt", "lastLogOutAt"]})
 
-        //or
-        // const {name, username, email, company, role, accountStatus, gender, lastLoginAt, lastLogOutAt} = userInDb
-
-        // const userDataToShow = {name, email, username, company, role, accountStatus, gender, lastLogOutAt,lastLoginAt}
-
         return res.status(200).json({userInDb})
     } catch (error) {   
         return res.status(500).json({ error: error.message });

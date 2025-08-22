@@ -10,6 +10,40 @@ const registerSchema = Joi.object({
     role: Joi.string().valid('user', 'vendor').default('user')
 })
 
+const updateUserSchema = Joi.object({
+  username: Joi.string().min(3).max(30).optional().messages({
+    "string.base":"username must be a string",
+    "string.min":"username cannot be less than 3 characters",
+    "string.max":"username cannot be more than 30 characters"
+  }),
+  name: Joi.string().min(3).max(30).optional().messages({
+    "string.base":"name must be a string",
+    "string.min":"name cannot be less than 3 characters",
+    "string.max":"name cannot be more than 30 characters"
+  }),
+  email: Joi.string().email().optional().messages({
+    "string.base":"email must be a string"
+  }),
+  gender: Joi.string().valid("male", "female", "other").optional(),
+  company: Joi.string().optional().messages({
+    "string.base":"company must be a string"
+  })
+})
+
+const deleteUserSchema = Joi.object({
+  username: Joi.string().min(3).max(30).alphanum().messages({
+    "string.base":"username must be a string",
+    "string.min":"username cannot be less than 3 characters",
+    "string.max":"username cannot be more than 30 characters"
+  }), 
+
+  password: Joi.string().min(3).max(30).alphanum().messages({
+    "string.base":"password must be a string",
+    "string.min": "password cannot be less than 3 characters", //i have no intention of someone entering 
+    "string.max": "password cannot be more than 30 characters" //1 
+  })
+})
+
 const verifyOtpSchema = Joi.object({
     email: Joi.string().email(),
     otp: Joi.string()
@@ -37,4 +71,4 @@ const loginSchema = Joi.object({
   
 });
     
-module.exports = {registerSchema, verifyOtpSchema, verifyResendOtp, loginSchema}
+module.exports = {registerSchema, verifyOtpSchema, verifyResendOtp, loginSchema, updateUserSchema, deleteUserSchema}

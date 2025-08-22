@@ -22,7 +22,7 @@ function authMiddleware(req, res, next) {
     req.user = { id, role: decoded.role}; 
     next(); 
   } catch (err) {
-    return res.status(500).json({ error: error.message});
+    return res.status(500).json({ error: err.message});
   }
 }
 
